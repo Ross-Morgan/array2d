@@ -175,6 +175,26 @@ pub struct Array2D<T> {
     num_columns: usize,
 }
 
+#[cfg(feature = "rayon")]
+impl<'data, T: Sync + 'data> rayon::iter::IntoParallelIterator for &'data crate::Array2D<T> {
+    type Item = &'data T;
+    type Iter = rayon::slice::Iter<'data, T>;
+
+    fn into_par_iter(self) -> Self::Iter {
+        <&[T]>::into_par_iter(&self.array)
+    }
+}
+
+#[cfg(feature = "rayon")]
+impl<'data, T: Send + 'data> rayon::iter::IntoParallelIterator for &'data mut crate::Array2D<T> {
+    type Item = &'data mut T;
+    type Iter = rayon::slice::IterMut<'data, T>;
+
+    fn into_par_iter(self) -> Self::Iter {
+        <&mut [T]>::into_par_iter(&mut self.array)
+    }
+}
+
 /// An error that can arise during the use of an [`Array2D`].
 ///
 /// [`Array2D`]: struct.Array2D.html
@@ -1468,3 +1488,4 @@ fn indices_column_major(
 ) -> impl DoubleEndedIterator<Item = (usize, usize)> + Clone {
     (0..num_columns).flat_map(move |column| (0..num_rows).map(move |row| (row, column)))
 }
+
